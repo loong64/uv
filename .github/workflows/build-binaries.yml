@@ -52,6 +52,7 @@ jobs:
         run: |
           gh release view ${version} -R ${{ github.repository }} >/dev/null 2>&1 || echo "create=1" >> $GITHUB_OUTPUT
           gh release view ${version} -R ${{ github.repository }} | grep uv-loongarch64-unknown-linux-gnu.tar.gz >/dev/null 2>&1 || echo "build=1" >> $GITHUB_OUTPUT
+          gh release view ${version} -R ${{ github.repository }} | grep uv-loongarch64-unknown-linux-musl.tar.gz >/dev/null 2>&1 || echo "build=1" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create tag
