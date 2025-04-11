@@ -84,6 +84,9 @@ jobs:
           - target: loongarch64-unknown-linux-gnu
             arch: loongarch64
             manylinux: 'manylinux_2_36'
+          - target: "loongarch64-unknown-linux-musl"
+            arch: loongarch64
+            manylinux: "musllinux_1_2"
 
     steps:
       - uses: actions/checkout@v4
@@ -98,7 +101,7 @@ jobs:
 
       # uv
       - name: "Build wheels"
-        uses: PyO3/maturin-action@v1
+        uses: loong64/maturin-action@main
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
