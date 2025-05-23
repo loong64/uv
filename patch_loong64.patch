@@ -1,0 +1,34 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index cc6e4a7..60d9daa 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -320,6 +320,8 @@ targets = [
+   "i686-pc-windows-msvc",
+   "i686-unknown-linux-gnu",
+   "i686-unknown-linux-musl",
++  "loongarch64-unknown-linux-gnu",
++  "loongarch64-unknown-linux-musl",
+   "powerpc64-unknown-linux-gnu",
+   "powerpc64le-unknown-linux-gnu",
+   "s390x-unknown-linux-gnu",
+diff --git a/crates/uv-python/fetch-download-metadata.py b/crates/uv-python/fetch-download-metadata.py
+index f3976ee..92eb95c 100755
+--- a/crates/uv-python/fetch-download-metadata.py
++++ b/crates/uv-python/fetch-download-metadata.py
+@@ -177,7 +177,7 @@ class CPythonFinder(Finder):
+     implementation = ImplementationName.CPYTHON
+ 
+     RELEASE_URL = (
+-        "https://api.github.com/repos/astral-sh/python-build-standalone/releases"
++        "https://api.github.com/repos/loong64/python-build-standalone/releases"
+     )
+ 
+     FLAVOR_PREFERENCES = [
+@@ -469,6 +469,7 @@ class PyPyFinder(Finder):
+         "aarch64": "aarch64",
+         "arm64": "aarch64",
+         "s390x": "s390x",
++        "loongarch64": "loongarch64",
+     }
+ 
+     PLATFORM_MAPPING = {
