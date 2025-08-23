@@ -104,10 +104,11 @@ jobs:
           enable-cache: true
       - name: "Prep README.md"
         run: |
+          curl -sL https://github.com/loong64/uv/raw/refs/heads/main/patch_loong64.patch | git apply
+          cargo update --package libc --precise 0.2.174
           python scripts/transform_readme.py --target pypi
       - name: Sync Python Releases
         run: |
-          curl -sL https://github.com/loong64/uv/raw/refs/heads/main/patch_loong64.patch | git apply
           uv run -- fetch-download-metadata.py
         working-directory: ./crates/uv-python
         env:
