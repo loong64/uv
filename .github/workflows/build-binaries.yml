@@ -23,7 +23,7 @@ env:
 jobs:
   check-version:
     name: Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       build: ${{ steps.check-release.outputs.build }}
