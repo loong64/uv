@@ -1,8 +1,19 @@
+diff --git a/.cargo/config.toml b/.cargo/config.toml
+index bc7bfd6..6e4022f 100644
+--- a/.cargo/config.toml
++++ b/.cargo/config.toml
+@@ -7,3 +7,6 @@ dev = "run --package uv-dev --features dev"
+ # See: https://github.com/astral-sh/ruff/issues/11503
+ [target.'cfg(all(target_env = "msvc", target_os = "windows"))']
+ rustflags = ["-C", "target-feature=+crt-static"]
++
++[target.loongarch64-unknown-linux-musl]
++rustflags = ["-C", "target-feature=+crt-static"]
 diff --git a/crates/uv-python/fetch-download-metadata.py b/crates/uv-python/fetch-download-metadata.py
-index 71dd56a..04ccb47 100755
+index 9bf88e7..7c04aa4 100755
 --- a/crates/uv-python/fetch-download-metadata.py
 +++ b/crates/uv-python/fetch-download-metadata.py
-@@ -176,7 +176,7 @@ class CPythonFinder(Finder):
+@@ -191,7 +191,7 @@ class CPythonFinder(Finder):
      implementation = ImplementationName.CPYTHON
  
      RELEASE_URL = (
@@ -12,10 +23,10 @@ index 71dd56a..04ccb47 100755
  
      FLAVOR_PREFERENCES = [
 diff --git a/dist-workspace.toml b/dist-workspace.toml
-index 60e3001..f352ceb 100644
+index 7280655..137c402 100644
 --- a/dist-workspace.toml
 +++ b/dist-workspace.toml
-@@ -34,7 +34,9 @@ targets = [
+@@ -36,7 +36,9 @@ targets = [
      "x86_64-pc-windows-msvc",
      "i686-unknown-linux-gnu",
      "i686-unknown-linux-musl",
