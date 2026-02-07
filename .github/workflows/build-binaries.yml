@@ -116,7 +116,7 @@ jobs:
 
       # uv
       - name: "Build wheels"
-        uses: loong64/maturin-action@main
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
@@ -153,7 +153,7 @@ jobs:
 
       # uv-build
       - name: "Build wheels uv-build"
-        uses: loong64/maturin-action@main
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
