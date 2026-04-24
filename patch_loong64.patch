@@ -10,10 +10,10 @@ index bc7bfd6..6e4022f 100644
 +[target.loongarch64-unknown-linux-musl]
 +rustflags = ["-C", "target-feature=+crt-static"]
 diff --git a/crates/uv-python/fetch-download-metadata.py b/crates/uv-python/fetch-download-metadata.py
-index 13ddfb9..ebfbdea 100755
+index 822869c..5575a13 100755
 --- a/crates/uv-python/fetch-download-metadata.py
 +++ b/crates/uv-python/fetch-download-metadata.py
-@@ -191,7 +191,7 @@ class Finder:
+@@ -191,10 +191,10 @@ class Finder:
  class CPythonFinder(Finder):
      implementation = ImplementationName.CPYTHON
  
@@ -21,9 +21,13 @@ index 13ddfb9..ebfbdea 100755
 +    NDJSON_URL = "https://github.com/loong64/versions/raw/refs/heads/main/v1/python-build-standalone.ndjson"
  
      FLAVOR_PREFERENCES = [
-         "install_only_stripped",
+-        "install_only_stripped",
++        # "install_only_stripped",
+         "install_only",
+         "shared-pgo",
+         "shared-noopt",
 diff --git a/dist-workspace.toml b/dist-workspace.toml
-index c1e33f9..d8636e8 100644
+index 54a2dcd..0292083 100644
 --- a/dist-workspace.toml
 +++ b/dist-workspace.toml
 @@ -36,7 +36,9 @@ targets = [
