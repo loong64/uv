@@ -20,6 +20,10 @@ env:
   CARGO_TERM_COLOR: always
   RUSTUP_MAX_RETRIES: 10
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   check-version:
     name: Check
@@ -86,27 +90,28 @@ jobs:
           - target: loongarch64-unknown-linux-gnu
             arch: loongarch64
             manylinux: 'manylinux_2_36'
+            maturin_docker_options: -e JEMALLOC_SYS_WITH_LG_PAGE=16
           - target: "loongarch64-unknown-linux-musl"
             arch: loongarch64
             manylinux: "musllinux_1_2"
+            maturin_docker_options: -e JEMALLOC_SYS_WITH_LG_PAGE=16
 
     steps:
       - uses: actions/checkout@v6
         with:
           repository: astral-sh/uv
           ref: ${{ env.version }}
-      - uses: actions/setup-python@v5
+
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
-          enable-cache: true
+
       - name: "Prep README.md"
         run: |
           curl -sL https://github.com/loong64/uv/raw/refs/heads/main/patch_loong64.patch | git apply
           # cargo update --package libc --precise 0.2.174
           python scripts/transform_readme.py --target pypi
+
       - name: Sync Python Releases
         run: |
           uv run -- fetch-download-metadata.py
@@ -120,7 +125,13 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
+          docker-options: -e CARGO ${{ matrix.platform.maturin_docker_options }}
           args: --release --locked --out dist --features self-update
+          before-script-linux: |
+            scripts/install-cargo-extensions.sh
+        env:
+          CARGO: ${{ github.workspace }}/scripts/cargo.sh
+
       - name: "Upload wheels"
         run: |
           pip install twine==6.0.1
@@ -133,7 +144,6 @@ jobs:
       - name: "Archive binary"
         shell: bash
         run: |
-          TARGET=${{ matrix.platform.target }}
           ARCHIVE_NAME=uv-$TARGET
           ARCHIVE_FILE=$ARCHIVE_NAME.tar.gz
 
@@ -142,6 +152,8 @@ jobs:
           cp target/$TARGET/release/uvx $ARCHIVE_NAME/uvx
           tar czvf $ARCHIVE_FILE $ARCHIVE_NAME
           shasum -a 256 $ARCHIVE_FILE > $ARCHIVE_FILE.sha256
+        env:
+          TARGET: ${{ matrix.platform.target }}
       - name: "Upload binary"
         uses: softprops/action-gh-release@v2
         with:
@@ -157,8 +169,12 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
-          docker-options: ${{ matrix.platform.maturin_docker_options }}
+          docker-options: -e CARGO ${{ matrix.platform.maturin_docker_options }}
           args: --profile minimal-size --locked --out crates/uv-build/dist -m crates/uv-build/Cargo.toml
+          before-script-linux: |
+            scripts/install-cargo-extensions.sh
+        env:
+          CARGO: ${{ github.workspace }}/scripts/cargo.sh
       - name: "Upload wheels uv-build"
         run: |
           pip install twine==6.0.1
