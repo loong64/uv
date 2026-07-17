@@ -1,3 +1,10 @@
+# Build uv on all platforms.
+#
+# Generates both wheels (for PyPI) and archived binaries (for GitHub releases).
+#
+# Called from:
+# - .github/workflows/ci.yml (when release-relevant files change)
+# - .github/workflows/release.yml (as a local artifacts job within `cargo-dist`)
 name: "Build release binaries"
 
 on:
@@ -8,6 +15,9 @@ on:
         description: 'Package version'
         type: string
         required: true
+  push:
+    branches:
+      - main
   schedule:
     - cron: '0 17 * * *'
 
@@ -33,15 +43,18 @@ jobs:
       build: ${{ steps.check-release.outputs.build }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Get Version
         id: get-version
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            version="latest"
-          else
-            version=${{ github.event.inputs.version }}
-          fi
+          case "${{ github.event_name }}" in
+            push|schedule)
+              version="latest"
+              ;;
+            *)
+              version=${{ github.event.inputs.version }}
+              ;;
+          esac
           if [ "${version}" = "latest" ]; then
             version=$(curl -s "https://api.github.com/repos/astral-sh/uv/releases/latest" | jq -r .tag_name)
           fi
@@ -54,6 +67,10 @@ jobs:
       - name: Check Release
         id: check-release
         run: |
+          if [ "${{ github.event_name }}" == 'push' ]; then
+            echo "build=1" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           gh release view ${version} -R ${{ github.repository }} >/dev/null 2>&1 || echo "create=1" >> $GITHUB_OUTPUT
           gh release view ${version} -R ${{ github.repository }} | grep uv-loongarch64-unknown-linux-gnu.tar.gz >/dev/null 2>&1 || echo "build=1" >> $GITHUB_OUTPUT
           gh release view ${version} -R ${{ github.repository }} | grep uv-loongarch64-unknown-linux-musl.tar.gz >/dev/null 2>&1 || echo "build=1" >> $GITHUB_OUTPUT
@@ -97,16 +114,17 @@ jobs:
             maturin_docker_options: -e JEMALLOC_SYS_WITH_LG_PAGE=16
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: astral-sh/uv
           ref: ${{ env.version }}
+          persist-credentials: false
 
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           enable-cache: true
@@ -137,7 +155,51 @@ jobs:
         env:
           CARGO: ${{ github.workspace }}/scripts/cargo.sh
 
+      - uses: loong64/run-on-arch-action@master
+        name: "Test wheel (manylinux)"
+        if: contains(matrix.platform.target, 'linux-gnu')
+        with:
+          arch: ${{ matrix.platform.arch }}
+          distro: trixie
+          install: |
+            apt-get update
+            apt-get install -y --no-install-recommends python3 python3-pip python3-venv python-is-python3
+          run: |
+            python3 -m venv .venv
+            .venv/bin/pip install -U pip
+            .venv/bin/pip install ${PACKAGE_NAME} --no-index --find-links dist/ --force-reinstall
+            .venv/bin/${MODULE_NAME} --help
+            # TODO(konsti): Enable this test on all platforms, currently `find_uv_bin` is failing to discover uv here.
+            # .venv/bin/python -m ${MODULE_NAME} --help
+            .venv/bin/uvx --help
+          env: |
+            PACKAGE_NAME: ${{ env.PACKAGE_NAME }}
+            MODULE_NAME: ${{ env.MODULE_NAME }}
+            PIP_EXTRA_INDEX_URL: "https://gitlab.com/api/v4/projects/65746188/packages/pypi/simple"
+
+      - uses: loong64/run-on-arch-action@master
+        name: "Test wheel (musllinux)"
+        if: contains(matrix.platform.target, 'linux-musl')
+        with:
+          arch: ${{ matrix.platform.arch }}
+          distro: alpine_latest
+          install: |
+            apk add python3
+          run: |
+            python3 -m venv .venv
+            .venv/bin/pip install -U pip
+            .venv/bin/pip install ${PACKAGE_NAME} --no-index --find-links dist/ --force-reinstall
+            .venv/bin/${MODULE_NAME} --help
+            # TODO(konsti): Enable this test on all platforms, currently `find_uv_bin` is failing to discover uv here.
+            # .venv/bin/python -m ${MODULE_NAME} --help
+            .venv/bin/uvx --help
+          env: |
+            PACKAGE_NAME: ${{ env.PACKAGE_NAME }}
+            MODULE_NAME: ${{ env.MODULE_NAME }}
+            PIP_EXTRA_INDEX_URL: "https://gitlab.com/api/v4/projects/65746188/packages/pypi/simple"
+
       - name: "Upload wheels"
+        if: github.event_name != 'push'
         run: |
           pip install twine==6.0.1
           for file in dist/*.whl; do
@@ -160,6 +222,7 @@ jobs:
         env:
           TARGET: ${{ matrix.platform.target }}
       - name: "Upload binary"
+        if: github.event_name != 'push'
         uses: softprops/action-gh-release@v2
         with:
           repository: ${{ github.repository }}
@@ -181,6 +244,7 @@ jobs:
         env:
           CARGO: ${{ github.workspace }}/scripts/cargo.sh
       - name: "Upload wheels uv-build"
+        if: github.event_name != 'push'
         run: |
           pip install twine==6.0.1
           for file in crates/uv-build/dist/*.whl; do
