@@ -10,30 +10,28 @@ index bc7bfd6..6e4022f 100644
 +[target.loongarch64-unknown-linux-musl]
 +rustflags = ["-C", "target-feature=+crt-static"]
 diff --git a/crates/uv-python/fetch-download-metadata.py b/crates/uv-python/fetch-download-metadata.py
-index 13ddfb9..ebfbdea 100755
+index 00c88d6..b405e02 100755
 --- a/crates/uv-python/fetch-download-metadata.py
 +++ b/crates/uv-python/fetch-download-metadata.py
-@@ -191,7 +191,7 @@ class Finder:
+@@ -194,7 +194,7 @@ class Finder:
  class CPythonFinder(Finder):
      implementation = ImplementationName.CPYTHON
  
 -    NDJSON_URL = "https://releases.astral.sh/github/versions/main/v1/python-build-standalone.ndjson"
 +    NDJSON_URL = "https://github.com/loong64/versions/raw/refs/heads/main/v1/python-build-standalone.ndjson"
  
-     FLAVOR_PREFERENCES = [
+     FLAVOR_PREFERENCES: ClassVar[list[str]] = [
          "install_only_stripped",
 diff --git a/dist-workspace.toml b/dist-workspace.toml
-index c1e33f9..d8636e8 100644
+index 54a2dcd..a9de677 100644
 --- a/dist-workspace.toml
 +++ b/dist-workspace.toml
-@@ -36,7 +36,9 @@ targets = [
-     "x86_64-pc-windows-msvc",
-     "i686-unknown-linux-gnu",
-     "i686-unknown-linux-musl",
--    "i686-pc-windows-msvc"
-+    "i686-pc-windows-msvc",
+@@ -26,6 +26,8 @@ targets = [
+     "arm-unknown-linux-musleabihf",
+     "armv7-unknown-linux-gnueabihf",
+     "armv7-unknown-linux-musleabihf",
 +    "loongarch64-unknown-linux-gnu",
-+    "loongarch64-unknown-linux-musl"
- ]
- # Whether to auto-include files like READMEs, LICENSEs, and CHANGELOGs (default true)
- auto-includes = false
++    "loongarch64-unknown-linux-musl",
+     "x86_64-apple-darwin",
+     "powerpc64le-unknown-linux-gnu",
+     "riscv64gc-unknown-linux-gnu",
