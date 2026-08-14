@@ -132,8 +132,12 @@ jobs:
       - name: "Prep README.md"
         run: |
           curl -sL https://github.com/loong64/uv/raw/refs/heads/main/patch_loong64.patch | git apply
-          # cargo update --package libc --precise 0.2.174
           python scripts/transform_readme.py --target pypi
+
+          # https://github.com/sunfishcode/linux-raw-sys/issues/192
+          echo '[patch.crates-io]' >> Cargo.toml
+          echo 'linux-raw-sys = { git = "https://github.com/loong64/linux-raw-sys", branch = "loong64-v0.12.1" }' >> Cargo.toml
+          cargo update --package linux-raw-sys
 
       - name: Sync Python Releases
         run: |
