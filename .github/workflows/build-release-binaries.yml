@@ -145,7 +145,7 @@ jobs:
 
       - name: Sync Python Releases
         run: |
-          uv run -- fetch-download-metadata.py
+          uv run --locked --python 3.12 --no-build --script fetch-download-metadata.py
         working-directory: ./crates/uv-python-managed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
